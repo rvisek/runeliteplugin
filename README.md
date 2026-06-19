@@ -1,10 +1,20 @@
-# Prayer Caller
+# Prayer Audio Cues
 
-A RuneLite plugin that plays an **audio cue telling you which protection prayer to use as a boss
-attacks** — so you can pray-flick by ear instead of watching animations.
+An **accessibility** RuneLite plugin that announces, by **sound**, which protection prayer to use as a
+boss attacks — so you can react by ear instead of reading fast visual attack tells.
 
-By default it plays bundled custom voice clips (`magic` / `ranged` / `melee`); you can switch to in-game
-prayer sounds and tune the volume. It only speaks when you actually need to **switch** prayer (configurable).
+Boss attack styles are normally communicated only visually (a projectile colour, a brief animation, a
+flash of flame vs. shadow). That's a barrier for players who are **blind or low-vision**, **colour
+blind** (Yama's red flames vs. dark shadow, Olm's green vs. crystal orb, etc.), have **visual-processing
+or reaction-time differences**, or simply need to look away from a busy screen. This plugin turns those
+visual-only signals into clear, distinct audio cues.
+
+It is **informational only**: it plays a sound (and optional chat line). It never activates prayers or
+takes any action for you — you still react and play the game yourself.
+
+By default it plays bundled spoken clips (`magic` / `ranged` / `melee`); you can switch to in-game prayer
+sounds and tune the volume. It only speaks when you actually need to **switch** prayer (configurable), to
+keep cues meaningful and reduce noise.
 
 ## Supported bosses
 
@@ -40,6 +50,19 @@ corresponding (Open)OSRS boss plugins, then cross-checked against the OSRS Wiki.
 `Bosses.java`. If Jagex ever changes an id and a callout stops working, turn on **Debug → Log spotanims &
 animations** — it prints the boss's animations, your spotanims, and nearby projectile ids to chat. Read
 the live value and update the matching entry in `Bosses.java`.
+
+## Accessibility design
+
+- **Audio-first.** Every supported attack has a distinct spoken cue, so no on-screen reading is required
+  to know which prayer to use.
+- **Not colour-dependent.** Cues are driven by the game's underlying attack data (animation / projectile
+  / NPC ids), not by on-screen colour — so they work regardless of colour vision.
+- **No automation.** The plugin only informs; it never presses prayers or acts for you. It's an assistive
+  cue, not a bot.
+- **Tunable to your needs.** Volume control, "only when a switch is needed" mode (less noise), per-attack
+  custom sounds (swap in your own clips/voice), and a master toggle.
+- **Self-paced verification.** A test hotkey plays the cues on demand so you can learn and check them
+  without being in a fight.
 
 ## Settings
 
@@ -86,7 +109,7 @@ A standard RuneLite external (Plugin Hub style) plugin.
 export JAVA_HOME=/opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home   # if keg-only
 ./gradlew run
 ```
-Launches a RuneLite client (developer mode) with the plugin side-loaded. Enable **Prayer Caller** in the
+Launches a RuneLite client (developer mode) with the plugin side-loaded. Enable **Prayer Audio Cues** in the
 plugin list.
 
 ### Build the jar

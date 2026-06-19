@@ -40,9 +40,10 @@ import net.runelite.client.util.HotkeyListener;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Prayer Caller",
-	description = "Audio callouts for which protection prayer to use as bosses attack",
-	tags = {"prayer", "boss", "pvm", "combat", "sound", "audio", "yama", "jad", "vorkath", "zulrah", "olm", "cerberus", "gauntlet"}
+	name = "Prayer Audio Cues",
+	description = "Accessibility: speaks the protection prayer to use as a boss attacks, for players who can't rely on visual tells",
+	tags = {"accessibility", "accessible", "audio", "sound", "cue", "blind", "low vision", "colourblind", "colorblind",
+		"prayer", "boss", "pvm", "combat", "yama", "jad", "vorkath", "zulrah", "olm", "cerberus", "gauntlet", "toa"}
 )
 public class PrayerCallerPlugin extends Plugin
 {
