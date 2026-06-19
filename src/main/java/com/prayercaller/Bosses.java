@@ -65,7 +65,45 @@ final class Bosses
 		// Great Olm (Chambers of Xeric) — head auto-attacks alternate magic/ranged by projectile.
 		new BossDefinition("Great Olm", PrayerCallerConfig::olm, Set.of(7551, 7554),
 			of(PROJECTILE, 1339, MAGIC),
-			of(PROJECTILE, 1340, RANGED))
+			of(PROJECTILE, 1340, RANGED)),
+
+		// --- Tombs of Amascut ---
+
+		// Akkha (Path of Het) — distinct mage/range/melee animations (spear normal, sword on enrage).
+		new BossDefinition("Akkha (ToA)", PrayerCallerConfig::akkha,
+			Set.of(11789, 11790, 11791, 11792, 11793, 11794, 11795, 11796),
+			of(NPC_ANIMATION, 9770, MELEE),
+			of(NPC_ANIMATION, 9771, MELEE),
+			of(NPC_ANIMATION, 9772, RANGED),
+			of(NPC_ANIMATION, 9773, RANGED),
+			of(NPC_ANIMATION, 9774, MAGIC),
+			of(NPC_ANIMATION, 9775, MAGIC)),
+
+		// Zebak (Path of Crondis) — mage/range share an animation, so detect autos by projectile.
+		new BossDefinition("Zebak (ToA)", PrayerCallerConfig::zebak, Set.of(11730, 11732),
+			of(PROJECTILE, 2176, MAGIC),
+			of(PROJECTILE, 2177, MAGIC),
+			of(PROJECTILE, 2178, RANGED),
+			of(PROJECTILE, 2179, RANGED),
+			of(NPC_ANIMATION, 9620, MELEE),
+			of(NPC_ANIMATION, 9621, MELEE),
+			of(NPC_ANIMATION, 9622, MELEE),
+			of(NPC_ANIMATION, 9623, MELEE)),
+
+		// Kephri (Path of Scabaras) — her fireball is dodged, not prayed; the real call is the agile
+		// scarab's ranged attack. (presence includes the range-kiting scarab so its projectile matches.)
+		new BossDefinition("Kephri (ToA)", PrayerCallerConfig::kephri, Set.of(11719, 11720, 11721, 11727),
+			of(PROJECTILE, 2152, RANGED)),
+
+		// Ba-Ba (Path of Apmeken) — melee only; her rocks/boulders bypass prayer.
+		new BossDefinition("Ba-Ba (ToA)", PrayerCallerConfig::baba, Set.of(11778),
+			of(NPC_ANIMATION, 9743, MELEE)),
+
+		// The Wardens (final) — phase-2 auto-attacks alternate magic/ranged by projectile.
+		new BossDefinition("Wardens (ToA)", PrayerCallerConfig::wardens,
+			Set.of(11753, 11754, 11755, 11756, 11757, 11758),
+			of(PROJECTILE, 2241, RANGED),
+			of(PROJECTILE, 2224, MAGIC))
 	);
 
 	private Bosses()

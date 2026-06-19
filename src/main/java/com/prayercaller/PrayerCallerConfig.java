@@ -118,6 +118,43 @@ public interface PrayerCallerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(keyName = "akkha", name = "Akkha (ToA)",
+		description = "Call prayers for Akkha's mage/range/melee attacks.", position = 18, section = bossSection)
+	default boolean akkha()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "zebak", name = "Zebak (ToA)",
+		description = "Call prayers for Zebak's mage/range/melee attacks.", position = 19, section = bossSection)
+	default boolean zebak()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "kephri", name = "Kephri (ToA)",
+		description = "Call Protect from Missiles for Kephri's agile scarabs. (Her fireball is a dodge, not a prayer.)",
+		position = 20, section = bossSection)
+	default boolean kephri()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "baba", name = "Ba-Ba (ToA)",
+		description = "Call Protect from Melee for Ba-Ba. (Her rocks/boulders bypass prayer.)",
+		position = 21, section = bossSection)
+	default boolean baba()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "wardens", name = "Wardens (ToA)",
+		description = "Call prayers for the Wardens' phase-2 mage/range auto-attacks.", position = 22, section = bossSection)
+	default boolean wardens()
+	{
+		return true;
+	}
+
 	@ConfigSection(
 		name = "Sounds",
 		description = "Which sound plays for each attack style.",

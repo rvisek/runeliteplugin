@@ -17,10 +17,21 @@ prayer sounds and tune the volume. It only speaks when you actually need to **sw
 | **Vorkath** | attack projectile | the two basics share an animation, so projectile-based |
 | **Zulrah** | form NPC id on spawn | green = range, blue = magic, red = melee (dodge) |
 | **Great Olm** (CoX) | head auto-attack projectile | magic = green orb, ranged = crystal |
+| **Akkha** (ToA) | mage / ranged / melee attack animations | incl. sword (enrage) variants |
+| **Zebak** (ToA) | attack projectile (+ melee animation) | mage/range share an animation |
+| **Kephri** (ToA) | agile-scarab projectile → ranged | her fireball is **dodged, not prayed** |
+| **Ba-Ba** (ToA) | melee animation | melee-only; rocks bypass prayer |
+| **Wardens** (ToA) | phase-2 auto-attack projectile | alternating magic / ranged |
 
-Each boss has its own on/off toggle in the config (**Bosses** section). TzKal-Zuk is intentionally **not**
-included: his blast is a single typeless/hybrid attack with no mage-vs-range tell, so there's nothing to
-call.
+Each boss has its own on/off toggle in the config (**Bosses** section).
+
+Intentionally limited or excluded, because there's no clean prayer to call:
+- **TzKal-Zuk** — single typeless/hybrid blast, no mage-vs-range tell.
+- **Kephri** — her main fireball is a positional dodge; only the agile-scarab ranged hit is a real
+  prayer call, so that's all she triggers.
+- **Ba-Ba** — purely melee; her boulder/rock mechanics bypass protection prayers entirely.
+- **Wardens** — only the phase-2 alternating autos are covered; the phase-3 "prayer skull" sequence
+  isn't (it needs per-projectile flight timing).
 
 ### Where the IDs come from
 
