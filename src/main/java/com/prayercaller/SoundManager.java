@@ -2,7 +2,7 @@
  * Copyright (c) 2026, ryanv
  * BSD 2-Clause License. See LICENSE.
  */
-package com.yamaprayer;
+package com.prayercaller;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -28,12 +28,12 @@ import lombok.extern.slf4j.Slf4j;
  * audio lines.
  */
 @Slf4j
-class YamaSoundManager
+class SoundManager
 {
 	private final Map<String, byte[]> cache = new HashMap<>();
 	private final ExecutorService executor = Executors.newSingleThreadExecutor(r ->
 	{
-		Thread t = new Thread(r, "yama-prayer-sound");
+		Thread t = new Thread(r, "prayer-caller-sound");
 		t.setDaemon(true);
 		return t;
 	});
@@ -66,7 +66,7 @@ class YamaSoundManager
 		}
 
 		byte[] data = null;
-		try (InputStream is = YamaSoundManager.class.getResourceAsStream(resourceName))
+		try (InputStream is = SoundManager.class.getResourceAsStream(resourceName))
 		{
 			if (is != null)
 			{
@@ -104,7 +104,7 @@ class YamaSoundManager
 		}
 		catch (Exception e)
 		{
-			log.warn("Failed to play Yama sound", e);
+			log.warn("Failed to play prayer-caller sound", e);
 		}
 	}
 

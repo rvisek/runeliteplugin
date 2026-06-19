@@ -1,76 +1,81 @@
-# Yama Prayer Caller
+# Prayer Caller
 
-A RuneLite plugin that plays an **audio cue telling you which protection prayer to use, right as Yama
-attacks** — so you can pray-flick the boss by ear instead of staring at his animations.
+A RuneLite plugin that plays an **audio cue telling you which protection prayer to use as a boss
+attacks** — so you can pray-flick by ear instead of watching animations.
 
-- **Flames envelop you** → Yama is attacking with **Magic** → plays the *Protect from Magic* sound.
-- **Shadow swirls engulf you** → Yama is attacking with **Ranged** → plays the *Protect from Missiles* sound.
-- **Axe swing (melee)** → plays the *Protect from Melee* sound (optional).
+By default it plays bundled custom voice clips (`magic` / `ranged` / `melee`); you can switch to in-game
+prayer sounds and tune the volume. It only speaks when you actually need to **switch** prayer (configurable).
 
-By default it fires the instant Yama *starts the cast* (watching the boss), which gives you the most
-lead time. You can switch to "on impact" if you prefer (more accurate for duos — see below).
+## Supported bosses
 
-## How it works
+| Boss | Detected via | Notes |
+|------|--------------|-------|
+| **Yama** | spotanim (flames = magic, shadow = ranged) + melee animation | "Earliest warning" calls it the instant Yama casts |
+| **TzTok-Jad** (Fight Cave) | distinct mage / ranged / melee attack animations | the classic prayer-switch boss |
+| **Hunllef** (The Gauntlet) | attack projectile | crystalline **and** corrupted |
+| **Cerberus** | the summoned-soul ghost that spawns | announces the souls in spawn order (one per tick) |
+| **Vorkath** | attack projectile | the two basics share an animation, so projectile-based |
+| **Zulrah** | form NPC id on spawn | green = range, blue = magic, red = melee (dodge) |
+| **Great Olm** (CoX) | head auto-attack projectile | magic = green orb, ranged = crystal |
 
-Yama (NPC `14176`) telegraphs every basic attack with a graphic (spotanim):
+Each boss has its own on/off toggle in the config (**Bosses** section). TzKal-Zuk is intentionally **not**
+included: his blast is a single typeless/hybrid attack with no mage-vs-range tell, so there's nothing to
+call.
 
-| Attack  | On Yama (cast) | On you (impact) | Prayer               | Default sound ID |
-|---------|----------------|-----------------|----------------------|------------------|
-| Magic   | `3246` (fire)  | `3247` (fire)   | Protect from Magic   | `2675`           |
-| Ranged  | `3243` (shadow)| `3244` (shadow) | Protect from Missiles| `2677`           |
-| Melee   | anim `12146`   | —               | Protect from Melee   | `2676`           |
+### Where the IDs come from
 
-By default the plugin plays **bundled custom voice clips** (`magic.wav` / `ranged.wav` / `melee.wav` in
-`src/main/resources/com/yamaprayer/`) with an adjustable volume. Turn off **Use custom sounds** to fall
-back to in-game sound effect IDs instead (defaults are the real prayer-activation sounds: magic `2675`,
-ranged `2677`, melee `2676`), all configurable.
-
-To swap in your own clips, replace those three WAV files and rebuild. Java only decodes PCM WAV/AIFF,
-so convert other formats first — e.g. on macOS: `afconvert -f WAVE -d LEI16@44100 in.mp3 out.wav`.
-
-> **Note on the IDs.** These come from RuneLite's decompiled game cache (`gameval/SpotanimID.java`,
-> `NpcID.java`, `AnimationID.java`). If Jagex ever changes them and the callouts stop working, turn on
-> **Debug → Log spotanims & animations** in the config, do the fight, read the numbers it prints to chat,
-> and update the constants at the top of `YamaPrayerPlugin.java`.
-
-### Earliest warning vs. duo accuracy
-
-- **Earliest warning ON (default):** triggers off the cast graphic on Yama. Maximum reaction time.
-  In a *duo*, the cast graphic isn't target-aware, so it'll warn even when the attack is aimed at your
-  partner.
-- **Earliest warning OFF:** triggers only off the graphic that lands on *you* — slightly later, but
-  correct in duos.
-
-Melee hits everyone within 3 tiles, so it's always called regardless of this setting.
+All detection IDs are sourced from RuneLite's decompiled game cache (`gameval/` files) and the
+corresponding (Open)OSRS boss plugins, then cross-checked against the OSRS Wiki. They live in
+`Bosses.java`. If Jagex ever changes an id and a callout stops working, turn on **Debug → Log spotanims &
+animations** — it prints the boss's animations, your spotanims, and nearby projectile ids to chat. Read
+the live value and update the matching entry in `Bosses.java`.
 
 ## Settings
 
-- **Only on prayer switch** – stay silent when you're already on the correct protection prayer; only
-  call out when the incoming attack needs a *different* prayer than the one you have on.
-- **Earliest warning** – call the prayer the moment Yama casts (vs. when it lands on you). Also
-  determines the single detection source, so each attack is only ever announced once.
-- **Call out melee** – also announce Yama's melee axe swing.
-- **Chat message** – also print the prayer to the chat box.
-- **Sounds** – master toggle + a configurable sound effect ID per attack style.
-- **Debug** – log every spotanim on you and every animation on Yama to chat (for verifying IDs), plus a
-  **Test callout hotkey** that cycles Magic → Ranged → Melee on each press so you can hear the three
-  sounds without fighting Yama.
+- **Only on prayer switch** – stay silent when you're already on the correct protection prayer.
+- **Call out melee** – also announce melee attacks.
+- **Chat message** – also print the prayer to chat.
+- **Yama: earliest warning** – Yama only; call on his cast (max lead time) vs. on impact (duo-accurate).
+  Also picks a single detection source so Yama is never double-called.
+- **Bosses** – per-boss on/off toggles.
+- **Sounds** – master toggle, **Use custom sounds**, **Custom sound volume** (0–100, default 50), and a
+  configurable in-game sound effect id per style for when custom sounds are off.
+- **Debug** – log ids to chat, and a **Test callout hotkey** that cycles Magic → Ranged → Melee so you
+  can hear the sounds without a boss.
+
+### Custom sounds
+
+The bundled clips are `magic.wav` / `ranged.wav` / `melee.wav` in `src/main/resources/com/prayercaller/`.
+To use your own, replace those three files and rebuild. Java only decodes PCM WAV/AIFF, so convert other
+formats first — e.g. on macOS: `afconvert -f WAVE -d LEI16@44100 in.mp3 out.wav`.
+
+## How it works
+
+The plugin is data-driven. Each boss is a `BossDefinition`: a set of NPC ids that mean "you're fighting
+it", plus a list of `AttackTrigger`s mapping a game-event id to an attack style. Trigger types:
+
+- `NPC_ANIMATION` – an animation played by the boss (Jad, Yama melee)
+- `NPC_SPOTANIM` / `PLAYER_SPOTANIM` – a graphic on the boss / on you (Yama)
+- `PROJECTILE` – a projectile launched during the fight (Hunllef, Vorkath, Olm)
+- `NPC_SPAWN` – an NPC appearing, e.g. a Zulrah form or a Cerberus soul
+
+Detection is scoped to whichever supported boss is currently present, so ids never collide between fights.
 
 ## Building / installing
 
-This is a standard RuneLite external (Plugin Hub style) plugin.
+A standard RuneLite external (Plugin Hub style) plugin.
 
 ### Prerequisites
-- **JDK 11** (RuneLite targets Java 11). On macOS: `brew install openjdk@11`, then point
-  `JAVA_HOME` at it. Verify with `java -version` showing `11.x`.
-- No need to install Gradle — the included Gradle wrapper (`./gradlew`) downloads it automatically.
+- **JDK 11** (RuneLite targets Java 11). On macOS: `brew install openjdk@11`, then point `JAVA_HOME` at it.
+- No need to install Gradle — the included wrapper (`./gradlew`) downloads it.
 
 ### Run a dev client with the plugin loaded
 ```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@11/libexec/openjdk.jdk/Contents/Home   # if keg-only
 ./gradlew run
 ```
-This launches a full RuneLite client (developer mode) with the plugin side-loaded via
-`YamaPrayerPluginTest`. Enable it in the plugin list, go fight Yama.
+Launches a RuneLite client (developer mode) with the plugin side-loaded. Enable **Prayer Caller** in the
+plugin list.
 
 ### Build the jar
 ```bash
@@ -78,41 +83,38 @@ This launches a full RuneLite client (developer mode) with the plugin side-loade
 ```
 
 ### Logging in with a Jagex Account (dev client)
-A `./gradlew run` dev client can't do the Jagex OAuth handoff by itself. Generate a credentials file
-from the official launcher and the dev client will read it automatically:
+A `./gradlew run` dev client can't do the Jagex OAuth handoff itself. Generate a credentials file from the
+official launcher and the dev client will read it automatically:
 
 1. In the **Jagex Launcher**, add `--insecure-write-credentials` to RuneLite's launch arguments.
-2. Launch RuneLite from the Jagex Launcher and log in once — this writes
-   `~/.runelite/credentials.properties`.
-3. Run `./gradlew run`; it picks up the credentials and logs in. (Tokens refresh for a while; repeat
-   step 2 if login ever stops working. You can remove the flag afterward.)
+2. Launch RuneLite from the Jagex Launcher and log in once — writes `~/.runelite/credentials.properties`.
+3. Run `./gradlew run`; it picks up the credentials and logs in.
 
-To hear the callouts without a Yama fight, bind the **Test callout hotkey** (config → Debug) and press
-it in-game.
-
-### IntelliJ IDEA
-1. Open the project folder (it'll import the Gradle build).
-2. Set the project SDK to JDK 11.
-3. Install the **Lombok** plugin and enable annotation processing.
-4. Run `YamaPrayerPluginTest.main()` to launch the client.
+To hear the callouts without a fight, bind the **Test callout hotkey** (config → Debug) and press it.
 
 ### Publishing to the Plugin Hub
-To share it publicly, submit this repo to the
-[RuneLite plugin-hub](https://github.com/runelite/plugin-hub) — fork it, add a file under `plugins/`
-pointing at your repo + commit hash, and open a PR. `runelite-plugin.properties` is already set up.
+Submit this repo to the [RuneLite plugin-hub](https://github.com/runelite/plugin-hub):
+fork it, add a file under `plugins/` pointing at your repo + commit hash, open a PR.
 
 ## Project layout
 ```
 build.gradle, settings.gradle      Gradle build (RuneLite latest.release)
 runelite-plugin.properties         Plugin Hub manifest
-src/main/java/com/yamaprayer/
-  YamaPrayerPlugin.java            Detection + audio callout logic
-  YamaPrayerConfig.java            Settings panel
-  YamaAttackStyle.java             Magic / Ranged / Melee -> prayer mapping
-src/test/java/com/yamaprayer/
-  YamaPrayerPluginTest.java        Dev launcher (./gradlew run)
+src/main/java/com/prayercaller/
+  PrayerCallerPlugin.java          Event handling + callout logic
+  PrayerCallerConfig.java          Settings panel
+  Bosses.java                      The boss registry (all detection ids live here)
+  BossDefinition.java              One boss: presence ids + triggers
+  AttackTrigger.java, TriggerType.java
+  AttackStyle.java                 Magic / Ranged / Melee -> prayer + sound
+  SoundManager.java                Bundled-WAV playback with volume
+src/main/resources/com/prayercaller/
+  magic.wav, ranged.wav, melee.wav Custom callout clips
+src/test/java/com/prayercaller/
+  PrayerCallerPluginTest.java      Dev launcher (./gradlew run)
 ```
 
 ## Status
-Code complete. **Not yet compiled in this workspace** — the machine it was authored on only had
-JDK 8 installed, and RuneLite requires JDK 11. Install JDK 11 and run `./gradlew run` to build & test.
+Builds and launches cleanly (verified with JDK 11). **In-game per-boss behavior is not yet verified** —
+detection ids are best-effort from authoritative sources. Use the Debug logging to confirm/fix ids during
+real fights and please report any that are off.
