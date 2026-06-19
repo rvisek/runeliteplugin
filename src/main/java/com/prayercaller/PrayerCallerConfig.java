@@ -178,6 +178,14 @@ public interface PrayerCallerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(keyName = "voicePack", name = "Voice",
+		description = "Which set of spoken callout clips to use (only applies when custom sounds are on).",
+		position = 23, section = soundSection)
+	default VoicePack voicePack()
+	{
+		return VoicePack.VOICE_1;
+	}
+
 	@ConfigItem(keyName = "killSounds", name = "Kill sound",
 		description = "Play a celebratory sound when you kill a boss (currently Yama).",
 		position = 22, section = soundSection)

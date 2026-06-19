@@ -72,17 +72,20 @@ the live value and update the matching entry in `Bosses.java`.
 - **Yama: earliest warning** – Yama only; call on his cast (max lead time) vs. on impact (duo-accurate).
   Also picks a single detection source so Yama is never double-called.
 - **Bosses** – per-boss on/off toggles.
-- **Sounds** – master toggle, **Use custom sounds**, **Kill sound** (a celebratory clip when you kill a
-  boss — currently Yama plays `goodboy.wav`), **Custom sound volume** (0–100, default 50), and a
-  configurable in-game sound effect id per style for when custom sounds are off.
+- **Sounds** – master toggle, **Use custom sounds**, **Voice** (choose between the bundled voice packs),
+  **Kill sound** (a celebratory clip when you kill a boss — currently Yama plays `goodboy.wav`), **Custom
+  sound volume** (0–100, default 50), and a configurable in-game sound effect id per style for when custom
+  sounds are off.
 - **Debug** – log ids to chat, and a **Test callout hotkey** that cycles Magic → Ranged → Melee so you
   can hear the sounds without a boss.
 
 ### Custom sounds
 
-The bundled clips are `magic.wav` / `ranged.wav` / `melee.wav` in `src/main/resources/com/prayercaller/`.
-To use your own, replace those three files and rebuild. Java only decodes PCM WAV/AIFF, so convert other
-formats first — e.g. on macOS: `afconvert -f WAVE -d LEI16@44100 in.mp3 out.wav`.
+Two spoken voice packs are bundled; pick one with the **Voice** dropdown (config → Sounds). The clips
+live in `src/main/resources/com/prayercaller/voice1/` and `voice2/`, each holding `magic.wav` /
+`ranged.wav` / `melee.wav`. To use your own, replace those files (or add another `voiceN/` folder and a
+new `VoicePack` enum entry) and rebuild. Java only decodes PCM WAV/AIFF, so convert other formats first —
+e.g. on macOS: `afconvert -f WAVE -d LEI16@44100 in.mp3 out.wav`.
 
 ## How it works
 

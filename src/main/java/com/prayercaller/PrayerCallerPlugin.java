@@ -374,8 +374,10 @@ public class PrayerCallerPlugin extends Plugin
 			return;
 		}
 
-		// Prefer the bundled custom clip; fall back to an in-game sound effect if it's off or missing.
-		if (config.useCustomSounds() && soundManager.play(style.getSoundResource(), config.customVolume()))
+		// Prefer the bundled custom clip from the selected voice pack; fall back to an in-game sound
+		// effect if custom sounds are off or the clip is missing.
+		final String resource = config.voicePack().getDir() + "/" + style.getSoundResource();
+		if (config.useCustomSounds() && soundManager.play(resource, config.customVolume()))
 		{
 			return;
 		}
