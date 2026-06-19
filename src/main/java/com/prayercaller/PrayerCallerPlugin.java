@@ -62,7 +62,8 @@ public class PrayerCallerPlugin extends Plugin
 	@Inject
 	private PrayerCallerConfig config;
 
-	private final SoundManager soundManager = new SoundManager();
+	@Inject
+	private SoundManager soundManager;
 
 	// Bosses physically present right now (ignores per-boss enable; that's checked when handling events).
 	private final List<BossDefinition> activeBosses = new ArrayList<>();
@@ -109,7 +110,6 @@ public class PrayerCallerPlugin extends Plugin
 	protected void shutDown()
 	{
 		keyManager.unregisterKeyListener(testHotkeyListener);
-		soundManager.shutdown();
 		activeBosses.clear();
 		resetState();
 	}
