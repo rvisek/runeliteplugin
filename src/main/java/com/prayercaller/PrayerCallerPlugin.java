@@ -22,6 +22,7 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.NPC;
 import net.runelite.api.Projectile;
+import net.runelite.api.events.ActorDeath;
 import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
@@ -156,6 +157,25 @@ public class PrayerCallerPlugin extends Plugin
 		if (pending != null)
 		{
 			callOut(pending.getBoss(), pending.getStyle());
+		}
+	}
+
+	@Subscribe
+	public void onActorDeath(ActorDeath event)
+	{
+		if (!config.soundsEnabled() || !config.killSounds() || !(event.getActor() instanceof NPC))
+		{
+			return;
+		}
+
+		final int id = ((NPC) event.getActor()).getId();
+		for (BossDefinition boss : Bosses.ALL)
+		{
+			if (boss.getKillSound() != null && boss.getPresenceNpcIds().contains(id))
+			{
+				soundManager.play(boss.getKillSound(), config.customVolume());
+				return;
+			}
 		}
 	}
 

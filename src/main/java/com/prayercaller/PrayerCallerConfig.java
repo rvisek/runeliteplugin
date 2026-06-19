@@ -178,6 +178,14 @@ public interface PrayerCallerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(keyName = "killSounds", name = "Kill sound",
+		description = "Play a celebratory sound when you kill a boss (currently Yama).",
+		position = 22, section = soundSection)
+	default boolean killSounds()
+	{
+		return true;
+	}
+
 	@Range(min = 0, max = 100)
 	@ConfigItem(keyName = "customVolume", name = "Custom sound volume",
 		description = "Volume (0-100) for the bundled custom sounds. Drag to taste.", position = 23, section = soundSection)

@@ -49,7 +49,8 @@ the live value and update the matching entry in `Bosses.java`.
 - **Yama: earliest warning** – Yama only; call on his cast (max lead time) vs. on impact (duo-accurate).
   Also picks a single detection source so Yama is never double-called.
 - **Bosses** – per-boss on/off toggles.
-- **Sounds** – master toggle, **Use custom sounds**, **Custom sound volume** (0–100, default 50), and a
+- **Sounds** – master toggle, **Use custom sounds**, **Kill sound** (a celebratory clip when you kill a
+  boss — currently Yama plays `goodboy.wav`), **Custom sound volume** (0–100, default 50), and a
   configurable in-game sound effect id per style for when custom sounds are off.
 - **Debug** – log ids to chat, and a **Test callout hotkey** that cycles Magic → Ranged → Melee so you
   can hear the sounds without a boss.

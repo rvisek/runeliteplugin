@@ -25,6 +25,8 @@ class BossDefinition
 	private final Set<Integer> presenceNpcIds;
 	/** Fast lookup: type -> (id -> style). */
 	private final Map<TriggerType, Map<Integer, AttackStyle>> triggers = new EnumMap<>(TriggerType.class);
+	/** Optional WAV resource played when this boss dies (null = no kill sound). */
+	private String killSound;
 
 	BossDefinition(String name, Predicate<PrayerCallerConfig> enabled, Set<Integer> presenceNpcIds,
 		AttackTrigger... triggerList)
@@ -36,6 +38,13 @@ class BossDefinition
 		{
 			triggers.computeIfAbsent(t.getType(), k -> new HashMap<>()).put(t.getId(), t.getStyle());
 		}
+	}
+
+	/** Fluent setter: bundle a WAV to play on this boss's death. */
+	BossDefinition killSound(String resource)
+	{
+		this.killSound = resource;
+		return this;
 	}
 
 	/** @return the attack style for this event id, or null if this boss doesn't recognise it. */

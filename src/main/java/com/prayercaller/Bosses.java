@@ -29,7 +29,7 @@ final class Bosses
 			of(NPC_SPOTANIM, 3243, RANGED),
 			of(PLAYER_SPOTANIM, 3247, MAGIC),
 			of(PLAYER_SPOTANIM, 3244, RANGED),
-			of(NPC_ANIMATION, 12146, MELEE)),
+			of(NPC_ANIMATION, 12146, MELEE)).killSound("goodboy.wav"),
 
 		// TzTok-Jad — distinct mage/range/melee attack animations.
 		new BossDefinition("TzTok-Jad", PrayerCallerConfig::jad, Set.of(3127),
