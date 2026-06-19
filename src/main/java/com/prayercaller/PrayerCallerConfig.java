@@ -156,9 +156,33 @@ public interface PrayerCallerConfig extends Config
 	}
 
 	@ConfigSection(
+		name = "NPC overlays",
+		description = "On-screen status text drawn above NPCs.",
+		position = 18
+	)
+	String overlaySection = "overlaySection";
+
+	@ConfigItem(keyName = "freezeTimers", name = "Freeze timer",
+		description = "Show a countdown above an NPC while it is frozen/bound (Ice spells, Bind/Snare/Entangle).",
+		position = 19, section = overlaySection)
+	default boolean freezeTimers()
+	{
+		return true;
+	}
+
+	@ConfigItem(keyName = "defenceTracker", name = "Defence reduction",
+		description = "Show an estimated defence reduction above an NPC from special attacks (Dragon Warhammer,<br>"
+			+ "Elder Maul, Statius). Estimate only - the client cannot read an NPC's real defence.",
+		position = 20, section = overlaySection)
+	default boolean defenceTracker()
+	{
+		return true;
+	}
+
+	@ConfigSection(
 		name = "Sounds",
 		description = "Which sound plays for each attack style.",
-		position = 20,
+		position = 25,
 		closedByDefault = true
 	)
 	String soundSection = "soundSection";

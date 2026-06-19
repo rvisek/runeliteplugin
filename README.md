@@ -51,6 +51,20 @@ corresponding (Open)OSRS boss plugins, then cross-checked against the OSRS Wiki.
 animations** — it prints the boss's animations, your spotanims, and nearby projectile ids to chat. Read
 the live value and update the matching entry in `Bosses.java`.
 
+## NPC overlays
+
+Beyond the audio cues, the plugin can draw status text above NPCs (config → **NPC overlays**):
+
+- **Freeze timer** – when you freeze/bind an NPC (Ice Rush/Burst/Blitz/Barrage, Bind/Snare/Entangle),
+  a countdown (in seconds) shows above it. Durations are the fixed freeze lengths; detection is by the
+  freeze graphic landing on the NPC. *NPC/PvM only — freeze timers on players are a prohibited PvP
+  feature, so this never tracks other players.*
+- **Defence reduction** – an **estimated** "-NN% def" above an NPC after a defence-lowering special
+  lands (Dragon Warhammer −30%, Elder Maul −35%, Statius −75%; these compound multiplicatively).
+  **Estimate only:** the client can't read an NPC's real defence, so this infers from detecting the spec
+  (spec-energy drop + equipped weapon) and a damaging hitsplat on the target. Flat/percent-of-base
+  reducers (BGS, Arclight, Accursed sceptre) aren't shown because they can't be expressed as a reliable %.
+
 ## Accessibility design
 
 - **Audio-first.** Every supported attack has a distinct spoken cue, so no on-screen reading is required
