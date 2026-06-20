@@ -51,6 +51,23 @@ corresponding (Open)OSRS boss plugins, then cross-checked against the OSRS Wiki.
 animations** — it prints the boss's animations, your spotanims, and nearby projectile ids to chat. Read
 the live value and update the matching entry in `Bosses.java`.
 
+## Party DPS Meter
+
+A second plugin in this jar (**Party DPS Meter**) shows a WoW-Recount-style damage/DPS breakdown per
+fight, for you and your party:
+
+- Counts your own hits locally and shares them over RuneLite's **Party** service, so each member's
+  damage shows individually (everyone in the party needs the plugin enabled). Works solo too — it just
+  shows your own line.
+- Panel lists each member sorted by damage, with **damage, DPS, and % of total**, plus a Total line.
+  Your line is highlighted.
+- **Per-fight:** the timer pauses after a few seconds out of combat, and a longer idle gap auto-resets
+  so each boss fight gets fresh numbers (both thresholds configurable). Right-click the panel → **Reset**
+  to clear manually.
+
+Damage attribution uses the same hitsplat logic as RuneLite's built-in DPS counter (only real
+melee/range/magic hits; poison/venom/heal/recoil are excluded).
+
 ## NPC overlays
 
 Beyond the audio cues, the plugin can draw status text above NPCs (config → **NPC overlays**):
