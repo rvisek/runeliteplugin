@@ -67,6 +67,12 @@ final class Bosses
 			of(PROJECTILE, 1339, MAGIC),
 			of(PROJECTILE, 1340, RANGED)),
 
+		// Phantom Muspah — phase-1 mage/range flip (and melee phase) read from the attack animation.
+		new BossDefinition("Phantom Muspah", PrayerCallerConfig::muspah, Set.of(12077, 12078, 12079, 12080),
+			of(NPC_ANIMATION, 9918, MAGIC),
+			of(NPC_ANIMATION, 9922, RANGED),
+			of(NPC_ANIMATION, 9920, MELEE)),
+
 		// --- Tombs of Amascut ---
 
 		// Akkha (Path of Het) — distinct mage/range/melee animations (spear normal, sword on enrage).

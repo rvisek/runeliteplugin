@@ -155,6 +155,13 @@ public interface PrayerCallerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(keyName = "muspah", name = "Phantom Muspah",
+		description = "Call prayers for Phantom Muspah's mage/range/melee attacks.", position = 23, section = bossSection)
+	default boolean muspah()
+	{
+		return true;
+	}
+
 	@ConfigSection(
 		name = "NPC overlays",
 		description = "On-screen status text drawn above NPCs.",
