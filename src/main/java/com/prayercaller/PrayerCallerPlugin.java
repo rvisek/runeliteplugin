@@ -16,17 +16,12 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.WeakHashMap;
 import javax.inject.Inject;
-import lombok.Getter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Actor;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.EquipmentInventorySlot;
 import net.runelite.api.GameState;
-import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemContainer;
 import net.runelite.api.NPC;
 import net.runelite.api.Projectile;
 import net.runelite.api.events.ActorDeath;
@@ -34,18 +29,15 @@ import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicChanged;
-import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.events.ProjectileMoved;
-import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.HotkeyListener;
 
 @Slf4j
@@ -59,25 +51,6 @@ public class PrayerCallerPlugin extends Plugin
 {
 	// Collapse a single attack's repeated events into one callout.
 	private static final int DEDUPE_TICKS = 3;
-
-	// Freeze/bind target spotanim id -> duration in game ticks.
-	private static final Map<Integer, Integer> FREEZE_TICKS = Map.of(
-		181, 8,    // Bind
-		180, 16,   // Snare
-		179, 24,   // Entangle
-		361, 8,    // Ice Rush
-		363, 16,   // Ice Burst
-		367, 24,   // Ice Blitz
-		369, 32);  // Ice Barrage
-
-	// Equipped weapon item id -> defence multiplier applied on a landed special (multiplicative reducers only).
-	private static final Map<Integer, Double> DEFENCE_MULTIPLIER = Map.of(
-		13576, 0.70,  // Dragon warhammer (-30% of current)
-		21003, 0.65,  // Elder maul (-35% of current)
-		22622, 0.25); // Statius's warhammer (-75% of current)
-
-	// How many ticks after a spec fires we still accept its landing hitsplat.
-	private static final int SPEC_HIT_WINDOW = 3;
 
 	// Priority order for "priority prayer" mode: most dangerous first.
 	private static final AttackStyle[] PRIORITY_ORDER = {AttackStyle.MAGIC, AttackStyle.RANGED, AttackStyle.MELEE};
@@ -111,21 +84,12 @@ public class PrayerCallerPlugin extends Plugin
 	@Inject
 	private SoundManager soundManager;
 
-	@Inject
-	private OverlayManager overlayManager;
-
-	@Inject
-	private NpcStatusOverlay npcStatusOverlay;
-
 	// Bosses physically present right now (ignores per-boss enable; that's checked when handling events).
 	private final List<BossDefinition> activeBosses = new ArrayList<>();
 	// Projectiles already handled — ProjectileMoved fires every frame for the same instance.
 	private final Set<Projectile> seenProjectiles = Collections.newSetFromMap(new WeakHashMap<>());
 	// NPC-spawn callouts are emitted one per tick so Cerberus's three souls announce in order.
 	private final Queue<Pending> spawnQueue = new ArrayDeque<>();
-	// Per-NPC freeze / defence-reduction state, read by the overlay.
-	@Getter
-	private final Map<NPC, NpcStatus> npcStatuses = new HashMap<>();
 
 	// Priority-prayer mode buffers each tick's styles, then announces only the most dangerous on GameTick.
 	private final Map<AttackStyle, BossDefinition> tickStyleBuffer = new EnumMap<>(AttackStyle.class);
@@ -135,12 +99,6 @@ public class PrayerCallerPlugin extends Plugin
 	private AttackStyle lastStyle;
 	private int lastTriggerTick = Integer.MIN_VALUE;
 	private int testCycleIndex;
-
-	// Defence-reduction spec tracking.
-	private int lastSpecEnergy = -1;
-	private NPC pendingSpecTarget;
-	private double pendingSpecMultiplier = 1.0;
-	private int pendingSpecExpiryTick = Integer.MIN_VALUE;
 
 	private final HotkeyListener testHotkeyListener = new HotkeyListener(() -> config.testHotkey())
 	{
@@ -170,14 +128,12 @@ public class PrayerCallerPlugin extends Plugin
 		recomputeActiveBosses();
 		resetState();
 		keyManager.registerKeyListener(testHotkeyListener);
-		overlayManager.add(npcStatusOverlay);
 	}
 
 	@Override
 	protected void shutDown()
 	{
 		keyManager.unregisterKeyListener(testHotkeyListener);
-		overlayManager.remove(npcStatusOverlay);
 		activeBosses.clear();
 		resetState();
 	}
@@ -240,7 +196,6 @@ public class PrayerCallerPlugin extends Plugin
 	@Subscribe
 	public void onNpcDespawned(NpcDespawned event)
 	{
-		npcStatuses.remove(event.getNpc());
 		recomputeActiveBosses();
 	}
 
@@ -254,68 +209,6 @@ public class PrayerCallerPlugin extends Plugin
 		}
 
 		flushPriority();
-
-		trackSpecialAttack();
-
-		// Drop NPC status once it's no longer frozen and has no tracked defence reduction.
-		final int tick = client.getTickCount();
-		npcStatuses.values().removeIf(s -> s.isExpired(tick));
-	}
-
-	/** Watch the spec-energy bar; when it drops while a defence-reducer is wielded, arm a pending hit. */
-	private void trackSpecialAttack()
-	{
-		final int energy = client.getVarpValue(VarPlayerID.SA_ENERGY);
-		final int previous = lastSpecEnergy;
-		lastSpecEnergy = energy;
-
-		if (previous < 0 || energy >= previous)
-		{
-			return; // first read, or energy regenerating (not a spec)
-		}
-
-		final Double multiplier = DEFENCE_MULTIPLIER.get(equippedWeaponId());
-		final Actor target = client.getLocalPlayer() == null ? null : client.getLocalPlayer().getInteracting();
-		if (multiplier == null || !(target instanceof NPC))
-		{
-			return;
-		}
-
-		pendingSpecTarget = (NPC) target;
-		pendingSpecMultiplier = multiplier;
-		pendingSpecExpiryTick = client.getTickCount() + SPEC_HIT_WINDOW;
-	}
-
-	private int equippedWeaponId()
-	{
-		final ItemContainer equipment = client.getItemContainer(InventoryID.EQUIPMENT);
-		if (equipment == null)
-		{
-			return -1;
-		}
-		final Item weapon = equipment.getItem(EquipmentInventorySlot.WEAPON.getSlotIdx());
-		return weapon == null ? -1 : weapon.getId();
-	}
-
-	@Subscribe
-	public void onHitsplatApplied(HitsplatApplied event)
-	{
-		if (pendingSpecTarget == null || event.getActor() != pendingSpecTarget)
-		{
-			return;
-		}
-		if (client.getTickCount() > pendingSpecExpiryTick)
-		{
-			pendingSpecTarget = null;
-			return;
-		}
-		// A landed defence-reducing spec deals damage; ignore a 0 (missed) hit.
-		if (event.getHitsplat().getAmount() > 0)
-		{
-			final NpcStatus status = npcStatuses.computeIfAbsent(pendingSpecTarget, k -> new NpcStatus());
-			status.setDefenceMultiplier(status.getDefenceMultiplier() * pendingSpecMultiplier);
-			pendingSpecTarget = null;
-		}
 	}
 
 	@Subscribe
@@ -375,12 +268,6 @@ public class PrayerCallerPlugin extends Plugin
 	public void onGraphicChanged(GraphicChanged event)
 	{
 		final Actor actor = event.getActor();
-
-		// Freeze detection applies to any NPC, independent of the boss callouts below.
-		if (config.freezeTimers() && actor instanceof NPC)
-		{
-			detectFreeze((NPC) actor);
-		}
 
 		if (config.debugLogging() && actor == client.getLocalPlayer() && !activeBosses.isEmpty())
 		{
@@ -450,19 +337,6 @@ public class PrayerCallerPlugin extends Plugin
 			if (style != null)
 			{
 				callOut(boss, style);
-				return;
-			}
-		}
-	}
-
-	private void detectFreeze(NPC npc)
-	{
-		for (Map.Entry<Integer, Integer> entry : FREEZE_TICKS.entrySet())
-		{
-			if (npc.hasSpotAnim(entry.getKey()))
-			{
-				npcStatuses.computeIfAbsent(npc, k -> new NpcStatus())
-					.setFreezeExpiryTick(client.getTickCount() + entry.getValue());
 				return;
 			}
 		}
@@ -630,13 +504,9 @@ public class PrayerCallerPlugin extends Plugin
 	{
 		spawnQueue.clear();
 		seenProjectiles.clear();
-		npcStatuses.clear();
 		tickStyleBuffer.clear();
 		lastThreatTick.clear();
 		lastStyle = null;
 		lastTriggerTick = Integer.MIN_VALUE;
-		lastSpecEnergy = -1;
-		pendingSpecTarget = null;
-		pendingSpecExpiryTick = Integer.MIN_VALUE;
 	}
 }
