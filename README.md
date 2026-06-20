@@ -81,6 +81,11 @@ Beyond the audio cues, the plugin can draw status text above NPCs (config → **
 ## Settings
 
 - **Only on prayer switch** – stay silent when you're already on the correct protection prayer.
+- **Priority prayer** – when several attack styles land in the same tick (busy Inferno waves), call only
+  the most dangerous one (Magic > Ranged > Melee) instead of every attacker. Reduces noise; adds ~1 tick
+  of latency, so leave it off for single-boss prayer flicking.
+- **Inferno: spawn callouts** – announce dangerous Inferno spawns in chat (Jad, healers, mager, ranger,
+  meleer, blob, Zuk), de-duplicated so groups don't spam.
 - **Call out melee** – also announce melee attacks.
 - **Chat message** – also print the prayer to chat.
 - **Yama: earliest warning** – Yama only; call on his cast (max lead time) vs. on impact (duo-accurate).

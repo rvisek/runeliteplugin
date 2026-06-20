@@ -51,6 +51,29 @@ public interface PrayerCallerConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "priorityPrayer",
+		name = "Priority prayer",
+		description = "When several attack styles land in the same tick (busy waves like the Inferno), call only the<br>"
+			+ "most dangerous one: Magic > Ranged > Melee. Reduces noise but adds ~1 tick of delay.",
+		position = 4
+	)
+	default boolean priorityPrayer()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "infernoThreats",
+		name = "Inferno: spawn callouts",
+		description = "Announce dangerous Inferno spawns in chat (Jad, healers, mager, ranger, meleer, blob, Zuk).",
+		position = 5
+	)
+	default boolean infernoThreats()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "yamaEarliestWarning",
 		name = "Yama: earliest warning",
 		description = "Yama only. Call the prayer the instant Yama starts casting (watches Yama) instead of waiting for<br>"
@@ -164,7 +187,7 @@ public interface PrayerCallerConfig extends Config
 
 	@ConfigItem(keyName = "inferno", name = "The Inferno",
 		description = "Call prayers for Inferno monsters (bat/ranger/mager/meleer, blob splits, Jad).<br>"
-			+ "Busy waves can be noisy - 'Only on prayer switch' and turning off melee help.",
+			+ "Busy waves: turn on 'Priority prayer' (top) to hear only the most dangerous style.",
 		position = 24, section = bossSection)
 	default boolean inferno()
 	{

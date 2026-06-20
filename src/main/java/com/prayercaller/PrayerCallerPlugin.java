@@ -8,6 +8,7 @@ import com.google.inject.Provides;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,23 @@ public class PrayerCallerPlugin extends Plugin
 	// How many ticks after a spec fires we still accept its landing hitsplat.
 	private static final int SPEC_HIT_WINDOW = 3;
 
+	// Priority order for "priority prayer" mode: most dangerous first.
+	private static final AttackStyle[] PRIORITY_ORDER = {AttackStyle.MAGIC, AttackStyle.RANGED, AttackStyle.MELEE};
+
+	// Inferno NPC id -> spoken/chat threat name (dangerous spawns worth announcing).
+	private static final Map<Integer, String> INFERNO_THREATS = Map.ofEntries(
+		Map.entry(7693, "Blob"),
+		Map.entry(7697, "Meleer"),
+		Map.entry(7698, "Ranger"), Map.entry(7702, "Ranger"),
+		Map.entry(7699, "Mager"), Map.entry(7703, "Mager"),
+		Map.entry(7700, "Jad"), Map.entry(7704, "Jad"),
+		Map.entry(7701, "Healers"), Map.entry(7705, "Healers"),
+		Map.entry(7706, "Zuk"),
+		Map.entry(7708, "Zuk healers"));
+
+	// Don't repeat the same threat name within this many ticks.
+	private static final int THREAT_DEDUPE_TICKS = 5;
+
 	@Inject
 	private Client client;
 
@@ -108,6 +126,11 @@ public class PrayerCallerPlugin extends Plugin
 	// Per-NPC freeze / defence-reduction state, read by the overlay.
 	@Getter
 	private final Map<NPC, NpcStatus> npcStatuses = new HashMap<>();
+
+	// Priority-prayer mode buffers each tick's styles, then announces only the most dangerous on GameTick.
+	private final Map<AttackStyle, BossDefinition> tickStyleBuffer = new EnumMap<>(AttackStyle.class);
+	// Last tick each Inferno threat name was announced (anti-spam).
+	private final Map<String, Integer> lastThreatTick = new HashMap<>();
 
 	private AttackStyle lastStyle;
 	private int lastTriggerTick = Integer.MIN_VALUE;
@@ -188,6 +211,30 @@ public class PrayerCallerPlugin extends Plugin
 				spawnQueue.add(new Pending(boss, style));
 			}
 		}
+
+		announceInfernoThreat(id);
+	}
+
+	private void announceInfernoThreat(int npcId)
+	{
+		if (!config.infernoThreats() || !config.inferno())
+		{
+			return;
+		}
+		final String threat = INFERNO_THREATS.get(npcId);
+		if (threat == null)
+		{
+			return;
+		}
+		final int tick = client.getTickCount();
+		final Integer last = lastThreatTick.get(threat);
+		if (last != null && tick - last < THREAT_DEDUPE_TICKS)
+		{
+			return;
+		}
+		lastThreatTick.put(threat, tick);
+		client.addChatMessage(ChatMessageType.GAMEMESSAGE, "",
+			"<col=ff3333>Inferno: " + threat + "!</col>", null);
 	}
 
 	@Subscribe
@@ -205,6 +252,8 @@ public class PrayerCallerPlugin extends Plugin
 		{
 			callOut(pending.getBoss(), pending.getStyle());
 		}
+
+		flushPriority();
 
 		trackSpecialAttack();
 
@@ -454,6 +503,36 @@ public class PrayerCallerPlugin extends Plugin
 
 	private void callOut(BossDefinition boss, AttackStyle style)
 	{
+		// In priority mode, buffer this tick's styles and resolve to the most dangerous on the next
+		// GameTick. Otherwise announce immediately (lowest latency).
+		if (config.priorityPrayer())
+		{
+			tickStyleBuffer.put(style, boss);
+			return;
+		}
+		announceCallout(boss, style);
+	}
+
+	private void flushPriority()
+	{
+		if (tickStyleBuffer.isEmpty())
+		{
+			return;
+		}
+		for (AttackStyle style : PRIORITY_ORDER)
+		{
+			final BossDefinition boss = tickStyleBuffer.get(style);
+			if (boss != null)
+			{
+				announceCallout(boss, style);
+				break;
+			}
+		}
+		tickStyleBuffer.clear();
+	}
+
+	private void announceCallout(BossDefinition boss, AttackStyle style)
+	{
 		if (style == AttackStyle.MELEE && !config.announceMelee())
 		{
 			return;
@@ -552,6 +631,8 @@ public class PrayerCallerPlugin extends Plugin
 		spawnQueue.clear();
 		seenProjectiles.clear();
 		npcStatuses.clear();
+		tickStyleBuffer.clear();
+		lastThreatTick.clear();
 		lastStyle = null;
 		lastTriggerTick = Integer.MIN_VALUE;
 		lastSpecEnergy = -1;
