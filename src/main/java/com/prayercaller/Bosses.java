@@ -73,6 +73,25 @@ final class Bosses
 			of(NPC_ANIMATION, 9922, RANGED),
 			of(NPC_ANIMATION, 9920, MELEE)),
 
+		// The Inferno — each wave monster has a fixed style; detect by attack animation. The blob's three
+		// split-minions share one animation, so they're disambiguated by spawn NPC id instead. Trivial
+		// nibblers are skipped (melee spam), and TzKal-Zuk's blast is typeless (no mage/range tell).
+		new BossDefinition("The Inferno", PrayerCallerConfig::inferno,
+			Set.of(7691, 7692, 7693, 7694, 7695, 7696, 7697, 7698, 7699, 7700,
+				7701, 7702, 7703, 7704, 7705, 7706),
+			of(NPC_ANIMATION, 7578, RANGED),   // Jal-MejRah (bat)
+			of(NPC_ANIMATION, 7597, MELEE),    // Jal-ImKot (meleer)
+			of(NPC_ANIMATION, 7605, RANGED),   // Jal-Xil ranged
+			of(NPC_ANIMATION, 7604, MELEE),    // Jal-Xil melee
+			of(NPC_ANIMATION, 7610, MAGIC),    // Jal-Zek magic
+			of(NPC_ANIMATION, 7612, MELEE),    // Jal-Zek melee
+			of(NPC_ANIMATION, 7592, MAGIC),    // JalTok-Jad magic
+			of(NPC_ANIMATION, 7593, RANGED),   // JalTok-Jad ranged
+			of(NPC_ANIMATION, 7590, MELEE),    // JalTok-Jad melee
+			of(NPC_SPAWN, 7694, MAGIC),        // Jal-AkRek-Mej (blob split -> mage)
+			of(NPC_SPAWN, 7695, RANGED),       // Jal-AkRek-Xil (blob split -> range)
+			of(NPC_SPAWN, 7696, MELEE)),       // Jal-AkRek-Ket (blob split -> melee)
+
 		// --- Tombs of Amascut ---
 
 		// Akkha (Path of Het) — distinct mage/range/melee animations (spear normal, sword on enrage).

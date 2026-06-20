@@ -162,6 +162,15 @@ public interface PrayerCallerConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(keyName = "inferno", name = "The Inferno",
+		description = "Call prayers for Inferno monsters (bat/ranger/mager/meleer, blob splits, Jad).<br>"
+			+ "Busy waves can be noisy - 'Only on prayer switch' and turning off melee help.",
+		position = 24, section = bossSection)
+	default boolean inferno()
+	{
+		return true;
+	}
+
 	@ConfigSection(
 		name = "NPC overlays",
 		description = "On-screen status text drawn above NPCs.",
