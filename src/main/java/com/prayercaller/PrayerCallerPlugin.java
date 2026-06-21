@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -68,6 +69,25 @@ public class PrayerCallerPlugin extends Plugin
 
 	// Don't repeat the same threat name within this many ticks.
 	private static final int THREAT_DEDUPE_TICKS = 5;
+
+	// Every NPC id the plugin reacts to (boss presence + spawn triggers + Inferno threats). Lets us
+	// skip recomputing the active-boss list when an irrelevant NPC spawns (e.g. the Yama room's burst).
+	private static final Set<Integer> RELEVANT_NPC_IDS = buildRelevantNpcIds();
+
+	private static Set<Integer> buildRelevantNpcIds()
+	{
+		final Set<Integer> ids = new HashSet<>(INFERNO_THREATS.keySet());
+		for (BossDefinition boss : Bosses.ALL)
+		{
+			ids.addAll(boss.getPresenceNpcIds());
+			final Map<Integer, AttackStyle> spawnTriggers = boss.getTriggers().get(TriggerType.NPC_SPAWN);
+			if (spawnTriggers != null)
+			{
+				ids.addAll(spawnTriggers.keySet());
+			}
+		}
+		return ids;
+	}
 
 	@Inject
 	private Client client;
@@ -134,6 +154,7 @@ public class PrayerCallerPlugin extends Plugin
 	protected void shutDown()
 	{
 		keyManager.unregisterKeyListener(testHotkeyListener);
+		soundManager.shutdown();
 		activeBosses.clear();
 		resetState();
 	}
@@ -151,9 +172,14 @@ public class PrayerCallerPlugin extends Plugin
 	@Subscribe
 	public void onNpcSpawned(NpcSpawned event)
 	{
+		final int id = event.getNpc().getId();
+		if (!RELEVANT_NPC_IDS.contains(id))
+		{
+			return; // irrelevant NPC — no effect on the active boss / triggers, skip the rescan
+		}
+
 		recomputeActiveBosses();
 
-		final int id = event.getNpc().getId();
 		for (BossDefinition boss : activeBosses)
 		{
 			if (!boss.getEnabled().test(config))
@@ -196,6 +222,10 @@ public class PrayerCallerPlugin extends Plugin
 	@Subscribe
 	public void onNpcDespawned(NpcDespawned event)
 	{
+		if (!RELEVANT_NPC_IDS.contains(event.getNpc().getId()))
+		{
+			return;
+		}
 		recomputeActiveBosses();
 	}
 
