@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-enum VoicePack
+public enum VoicePack
 {
 	VOICE_1("Voice 1", "voice1"),
 	VOICE_2("Voice 2", "voice2");
